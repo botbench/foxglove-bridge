@@ -1,0 +1,74 @@
+#apiVersion: apps/v1
+#kind: Deployment
+#metadata:
+#  name: foxglove-bridge-node
+#spec:
+#  replicas: 1
+#  selector:
+#    matchLabels:
+#      app: foxglove-bridge
+#  template:
+#    metadata:
+#      labels:
+#        app: foxglove-bridge
+#    spec:
+#      containers:
+#        - name: foxglove-bridge
+#          image: botbench/foxglove-bridge:latest
+#---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foxglove-bridge
+  labels:
+    app: foxglove-bridge
+  annotations:
+    kubernetes.io/created-by: "Xander Soldaat"
+spec:
+  replicas: 1 # Number of desired pods
+  selector:
+    matchLabels:
+      app: foxglove-bridge
+  template:
+    metadata:
+      labels:
+        app: foxglove-bridge
+    spec:
+      containers:
+        - name: foxglove-bridge
+          image: botbench/foxglove-bridge:latest
+          args: ["ros2", "launch", "foxglove_bridge", "foxglove_bridge_launch.xml"]
+          env:
+            - name: ROS_LOG_DIR
+              value: "/tmp/ros-logs"
+            - name: RCUTILS_LOGGING_USE_STDOUT
+              value: "1"
+          ports:
+            - containerPort: 8765
+          livenessProbe:
+            tcpSocket:
+              port: 8765
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 8765
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foxglove-bridge
+  labels:
+    app: foxglove-bridge
+  annotations:
+    kubernetes.io/created-by: "Xander Soldaat"
+spec:
+  selector:
+    app: foxglove-bridge
+  ports:
+    - protocol: TCP
+      port: 8765
+      targetPort: 8765
+  type: ClusterIP # Change to NodePort or LoadBalancer if external access is needed

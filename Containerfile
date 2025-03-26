@@ -15,8 +15,13 @@ LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.exposedPorts="8765/tcp"
 EXPOSE 8765
 
+ENV ROS_LOG_DIR="/tmp/ros-logs" \
+    RCUTILS_LOGGING_USE_STDOUT="1"
+
 # Install Foxglove
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-$ROS_DISTRO-foxglove-bridge \
     && rm -rf /var/lib/apt/lists/*
+
+CMD ["ros2", "launch", "foxglove_bridge", "foxglove_bridge_launch.xml"]
 
